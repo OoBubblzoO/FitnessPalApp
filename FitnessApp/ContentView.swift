@@ -55,6 +55,10 @@ struct ContentView: View {
     
     // Local state
     @State private var isSheetPresented: Bool = false
+    
+    // before selection nil, after selecting <workoutGroup>
+    @State private var selectedGroup: WorkoutGroup? = nil // store selected group obj..
+    
     var body: some View {
         VStack {
             
@@ -83,6 +87,8 @@ struct ContentView: View {
                 List {
                     // loop over every workoutGroup in workoutGroups
                     ForEach(workoutGroups) { workoutGroup in
+                        let isSelected = selectedGroup?.id == workoutGroup.id
+                        
                         Section(header: Text(workoutGroup.title)) {
                             // loop over every workout in workoutGroup
                             ForEach(workoutGroup.workouts){ workout in
@@ -97,21 +103,29 @@ struct ContentView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                                 }
+                                .contentShape(Rectangle())
+                                .listRowBackground(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
+                                .onTapGesture {
+                                    selectedGroup = workoutGroup
+                                }
                             }
                         }
                     }
                 }
                 
                 Button("Start Workout"){
-                    isSheetPresented.toggle()
+                    //isSheetPresented.toggle()
+                    print("You've chosen", selectedGroup?.title , "as your workout")
                     print("Workout has been selected... Entering workout mode...")
                 }
+                .disabled(selectedGroup == nil)
                 
                 Divider()
                 
                 Button("Cancel Check in ") {
                     isSheetPresented.toggle()
                     print("isSheetPresented has been toggled to " , isSheetPresented, " and is now cancelled")
+                    selectedGroup = nil
                 }
                 
             
