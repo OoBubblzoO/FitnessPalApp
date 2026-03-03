@@ -9,9 +9,14 @@ import SwiftUI
 
 @main
 struct FitnessAppApp: App {
+    
+    // 1 instance and keep alive with the app
+    @StateObject private var manager = WorkoutManager()
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(manager)
         }
     }
 }
+
