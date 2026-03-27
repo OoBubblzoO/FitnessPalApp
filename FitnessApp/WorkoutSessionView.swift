@@ -17,43 +17,59 @@ struct WorkoutSessionView: View {
     @State private var showCompletionAlert: Bool = false
 
     var body: some View {
-        VStack {
-            List {
-                ForEach(workoutGroup.workouts) { workout in
-                    NavigationLink {
-                        ExerciseDetailView(workout: workout)
-                    } label: {
-                        VStack(alignment: .leading) {
-                            Text(workout.name)
-                                .font(.headline)
-                            
-                            HStack(spacing: 16) {
-                                Text("Sets: \(workout.sets)")
-                                Text("Reps: \(workout.reps)")
+        ZStack {
+            Color("BackgroundColor")
+                .ignoresSafeArea()
+            VStack {
+                Text(workoutGroup.title)
+                    .font(.system(size: 25, weight: .medium))
+                    .foregroundStyle(Color("AccentColor"))
+                    .padding(.top, 50)
+                List {
+                    ForEach(workoutGroup.workouts) { workout in
+                        NavigationLink
+                        {
+                            ExerciseDetailView(workout: workout)
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(workout.name)
+                                    .font(.headline)
+                                
+                                HStack(spacing: 16) {
+                                    Text("Sets: \(workout.sets)")
+                                    Text("Reps: \(workout.reps)")
+                                }
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                
                             }
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 8)
                         }
-                        .padding(.vertical, 8)
+                        .listRowBackground(Color("AccentColor"))
                     }
                 }
-            }
-            .navigationTitle(workoutGroup.title)
-            .alert("Workout Complete", isPresented: $showCompletionAlert) {
-                Button("OK") {
-                    onWorkoutCompleted()
+                .listRowBackground(Color.clear)
+                .scrollContentBackground(.hidden)
+                //.navigationTitle(workoutGroup.title)
+                .alert("Workout Complete", isPresented: $showCompletionAlert) {
+                    Button("OK") {
+                        onWorkoutCompleted()
+                    }
+                } message: {
+                    Text(completionSummary)
                 }
-            } message: {
-                Text(completionSummary)
-            }
-            
-            Button("Workout Complete") {
-                // Finish the session first so it is saved into completedSessions.
-                manager.completeSession()
                 
-                // Build the alert text from the saved session we just completed.
-                completionSummary = completionMessage
-                showCompletionAlert = true
+                Button("Workout Complete") {
+                    // Finish the session first so it is saved into completedSessions.
+                    manager.completeSession()
+                    
+                    // Build the alert text from the saved session we just completed.
+                    completionSummary = completionMessage
+                    showCompletionAlert = true
+                }
+                .buttonStyle(.fitnessAccent())
+                .padding(.horizontal)
+                .padding(.bottom)
             }
         }
     }
@@ -99,4 +115,16 @@ struct WorkoutSessionView: View {
     private func formattedWeight(_ weight: Double) -> String {
         String(format: "%.1f", weight)
     }
+}
+
+#Preview {
+    let manager = WorkoutManager()
+
+    return NavigationStack {
+        WorkoutSessionView(
+            workoutGroup: manager.workoutGroups[0],
+            onWorkoutCompleted: {}
+        )
+    }
+    .environmentObject(manager)
 }

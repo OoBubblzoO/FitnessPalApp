@@ -77,5 +77,29 @@ class WorkoutManager: ObservableObject {
             .sorted { $0.date > $1.date }
             .first
     }
+    
+    func addWorkoutGroup(title: String, workouts:[Workout]){
+        let cleanedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines) // Remove spaces and new lines
+        
+        guard !cleanedTitle.isEmpty, !workouts.isEmpty else { return } // If empty exit
+        
+        let newGroup = WorkoutGroup(title: cleanedTitle, workouts: workouts)
+        workoutGroups.append(newGroup)
+    }
+    
+    func addWorkout(to groupID: UUID, name: String, reps: String, sets: String){
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanSets = sets.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanReps = reps.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard !cleanName.isEmpty, !cleanSets.isEmpty, !cleanReps.isEmpty else { return } // Exit if empty
+        guard let groupIndex = workoutGroups.firstIndex(where: { $0.id == groupID }) else { return }
+        
+        let newWorkout = Workout(name: cleanName, sets: cleanSets, reps: cleanReps)
+        workoutGroups[groupIndex].workouts.append(newWorkout)
+        
+        
+        
+    }
 }
 
