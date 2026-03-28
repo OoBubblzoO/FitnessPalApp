@@ -5,7 +5,10 @@
 //  Created by Cheeto on 2/10/26.
 //
 
+
+// MARK: Hook swiftData to app, swap out environmentObject using .modelcontainer creates a table 
 import SwiftUI
+import SwiftData
 
 @main
 struct FitnessAppApp: App {
@@ -17,6 +20,8 @@ struct FitnessAppApp: App {
             ContentView()
                 .environmentObject(manager)
         }
+        .modelContainer(for: [WorkoutSession.self , ExerciseLog.self]) // creates database
+
     }
 }
 

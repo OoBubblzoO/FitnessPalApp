@@ -5,15 +5,18 @@
 //  Created by Cheeto on 2/18/26.
 //
 import SwiftUI
+import SwiftData
 
 struct ExerciseDetailView: View {
     
     let workout: Workout
-    
-    @EnvironmentObject var manager: WorkoutManager
+    let currentSession: WorkoutSession?
     
     @State private var weightInput: String = ""
     @State private var repsInput: String = ""
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \ExerciseLog.date, order: .reverse)
+    private var logs: [ExerciseLog]
     
     var body: some View {
         ZStack {
@@ -39,8 +42,16 @@ struct ExerciseDetailView: View {
                 Button("Save Set") {
                     if let weight = Double(weightInput),
                        let reps = Int(repsInput) {
+                        let log = ExerciseLog(
+                            workoutID: workout.id,
+                            date: Date(),
+                            weight: weight,
+                            reps: reps,
+                            session: currentSession
+                        )
                         
-                        manager.addLog(for: workout, weight: weight, reps: reps)
+                        currentSession?.logs.append(log)
+                        modelContext.insert(log)
                         
                         weightInput = ""
                         repsInput = ""
@@ -50,7 +61,7 @@ struct ExerciseDetailView: View {
                 .buttonStyle(.fitnessPrimary())
                 
                 // Pulls from completedSessions and shows user what last weight done
-                if let lastLog = manager.lastCompletedLog(for: workout) {
+                if let lastLog = lastCompletedLog {
                     Text("Last time: \(formattedWeight(lastLog.weight)) lbs x \(lastLog.reps)")
                         .foregroundColor(.gray)
                 }
@@ -67,6 +78,12 @@ struct ExerciseDetailView: View {
                     .foregroundStyle(Color("AccentColor"))
             }
         }    }
+    
+    private var lastCompletedLog: ExerciseLog? {
+        logs.first { log in
+            log.workoutID == workout.id && (log.session?.isCompleted ?? false)
+        }
+    }
     
     private func formattedWeight(_ weight: Double) -> String {
         String(format: "%.1f", weight)

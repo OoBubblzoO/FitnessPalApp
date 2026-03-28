@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 struct ContentView: View {
     
     // MARK: Environment
@@ -22,7 +23,16 @@ struct ContentView: View {
     // The group currently being performed in a session
     @State private var activeGroup: WorkoutGroup? = nil
     
-    // MARK: Body
+    // Starting sessions
+    @Environment(\.modelContext) private var modelContext
+    @State private var currentSession: WorkoutSession?
+    @Query(sort: \WorkoutSession.date, order: .reverse)
+    var sessions: [WorkoutSession]
+    
+    //Viewing information
+    @Environment(\.modelContext) private var context
+    @Query(sort: \ExerciseLog.date, order: .reverse)
+    var logs: [ExerciseLog]
     
     var body: some View {
         NavigationStack {
@@ -32,10 +42,12 @@ struct ContentView: View {
                 
                 // Show the session view only after a group is chosen
                 if let group = activeGroup {
-                    WorkoutSessionView(workoutGroup: group) {
+                    WorkoutSessionView(workoutGroup: group, currentSession: currentSession,
+                                       onWorkoutCompleted: {
+                        currentSession = nil
                         activeGroup = nil
                         selectedGroup = nil
-                    }
+                    })
                 } else {
                     VStack(spacing: 20) {
                         Image(systemName: "figure.strengthtraining.traditional")
@@ -53,6 +65,17 @@ struct ContentView: View {
                             .foregroundStyle(Color("AccentColor"))
                         
                         VStack(spacing: 14) {
+                            Button("Save Test Log") {
+                                let log = ExerciseLog(
+                                    workoutID: UUID(),
+                                    date: Date(),
+                                    weight: 135,
+                                    reps: 10
+                                )
+                                
+                                context.insert(log)
+                                print("Log has been saved successfully")
+                            }
                             Button("I'm at the gym") {
                                 isSheetPresented.toggle()
                             }
@@ -82,6 +105,14 @@ struct ContentView: View {
                     }
                 }
             }
+            Text("Sessions count: \(sessions.count)")
+            List(logs, id: \.self) { log in
+                VStack(alignment: .leading) {
+                    Text("Weight: \(log.weight)")
+                    Text("Reps: \(log.reps)")
+                }
+            }
+            .frame(height: 200)
         }
     }
     
@@ -142,9 +173,14 @@ struct ContentView: View {
                     Button("Start Workout") {
                         guard let group = selectedGroup else { return }
                         
-                        manager.startSession(for: group)
+                        let newSession = WorkoutSession(workoutGroupID: group.id)
+                        modelContext.insert(newSession)
+                        currentSession = newSession
+                        
                         activeGroup = group
                         isSheetPresented = false
+                        
+                        print("Session created: \(newSession.date)")
                     }
                     .buttonStyle(.fitnessPrimary())
                     .opacity(selectedGroup == nil ? 0.45 : 1)

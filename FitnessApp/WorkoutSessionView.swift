@@ -5,13 +5,15 @@
 //  Created by Cheeto on 2/18/26.
 //
 import SwiftUI
+import SwiftData
 
 struct WorkoutSessionView: View {
-    
-    @EnvironmentObject var manager: WorkoutManager
-    
     let workoutGroup: WorkoutGroup
+    let currentSession: WorkoutSession?
     let onWorkoutCompleted: () -> Void
+    
+    @Query(sort: \WorkoutSession.date, order: .reverse)
+    private var sessions: [WorkoutSession]
     
     @State private var completionSummary: String = ""
     @State private var showCompletionAlert: Bool = false
@@ -29,7 +31,7 @@ struct WorkoutSessionView: View {
                     ForEach(workoutGroup.workouts) { workout in
                         NavigationLink
                         {
-                            ExerciseDetailView(workout: workout)
+                            ExerciseDetailView(workout: workout, currentSession: currentSession)
                         } label: {
                             VStack(alignment: .leading) {
                                 Text(workout.name)
@@ -60,10 +62,8 @@ struct WorkoutSessionView: View {
                 }
                 
                 Button("Workout Complete") {
-                    // Finish the session first so it is saved into completedSessions.
-                    manager.completeSession()
-                    
-                    // Build the alert text from the saved session we just completed.
+                    guard let currentSession else { return }
+                    currentSession.isCompleted = true
                     completionSummary = completionMessage
                     showCompletionAlert = true
                 }
@@ -74,13 +74,11 @@ struct WorkoutSessionView: View {
         }
     }
     
-    // This pulls the newest completed session for the workout group shown in this view.
     private var latestCompletedSessionForGroup: WorkoutSession? {
-        manager.completedSessions
+        sessions
             .filter { completedSession in
-                completedSession.workoutGroupID == workoutGroup.id // taking current session (temporary)
+                completedSession.isCompleted && completedSession.workoutGroupID == workoutGroup.id
             }
-            .sorted { $0.date > $1.date }
             .first
     }
     
@@ -123,8 +121,8 @@ struct WorkoutSessionView: View {
     return NavigationStack {
         WorkoutSessionView(
             workoutGroup: manager.workoutGroups[0],
+            currentSession: nil,
             onWorkoutCompleted: {}
         )
     }
-    .environmentObject(manager)
 }

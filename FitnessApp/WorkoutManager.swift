@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftData
 
 class WorkoutManager: ObservableObject {
     
@@ -47,17 +48,20 @@ class WorkoutManager: ObservableObject {
     }
     
     // add log for current workout of the weights and reps
-    func addLog(for workout: Workout, weight: Double, reps: Int) {
-        guard var session = activeSession else { return }
+    func addLog(for workout: Workout, weight: Double, reps: Int, session: WorkoutSession, context: ModelContext) {
+        //guard var session = activeSession else { return }
         
         let log = ExerciseLog(
             workoutID: workout.id,
             date: Date(),
             weight: weight,
-            reps: reps
+            reps: reps,
+            session: session // Links log to session
         )
         
         session.logs.append(log)
+        context.insert(log) //saves to SwiftData
+        
         activeSession = session
     }
     

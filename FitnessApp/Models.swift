@@ -7,6 +7,26 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
+
+
+// MARK: UPDATE TO BE ABLE TO USE SWIFTDATA
+
+/**
+ This means we're going to change the struct to a class. Struct is a value type that gets copied when changed. Class references the same object that's shared and updated
+ Struct - a screenshot
+ Class - live document that can be edited
+ .modelContext connects to database  *DO NOT FORGET* (pen)
+ context.insert writing page
+ Query going to allow to retrieve from Database
+ 
+ modelContainer - database
+ modelContext - talk  to it
+ @Model - what's getting stored
+ @Query - how to read
+ 
+ Change WorkoutGroup, Workout, WorkoutSession, ExerciseLog to classes and @Model
+ */
 
 // A single exercise with display info for sets and reps
 // Dynamic list that can be updated
@@ -27,21 +47,40 @@ struct WorkoutGroup: Identifiable {
 
 // A record of what you lifted for a workout on a date
 // on this date workout was performed with this weight and reps
-struct ExerciseLog: Identifiable {
-    var id = UUID()
+@Model
+final class ExerciseLog {
     var workoutID: UUID
     var date: Date
     var weight: Double
     var reps: Int
+    var session: WorkoutSession? // Belongs to workout session -> workoutSession creates logs
+    
+    init(workoutID: UUID, date: Date, weight: Double, reps: Int, session: WorkoutSession? = nil) {
+        self.workoutID = workoutID
+        self.date = date
+        self.weight = weight
+        self.reps = reps
+        self.session = session
+    }
 }
 
 // A full session ties logs to a group on specific date
-struct WorkoutSession: Identifiable {
-    var id = UUID()
+@Model
+final class WorkoutSession {
+    //var id = UUID()
     var workoutGroupID: UUID     // Links back to the selected group
     var date: Date               // Date recorded to group
     var logs: [ExerciseLog]      // All sets recorded in this session
     var isCompleted: Bool        // Marks if the session was finished
+    
+    
+    // Provide default values for saved time
+    init(workoutGroupID: UUID, date: Date = Date(), logs: [ExerciseLog] = [], isCompleted: Bool = false) {
+        self.workoutGroupID = workoutGroupID
+        self.date = date
+        self.logs = logs
+        self.isCompleted = isCompleted
+    }
 }
 
 // Filled button style
