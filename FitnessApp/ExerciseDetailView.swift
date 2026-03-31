@@ -44,6 +44,7 @@ struct ExerciseDetailView: View {
                        let reps = Int(repsInput) {
                         let log = ExerciseLog(
                             workoutID: workout.id,
+                            name: workout.name,
                             date: Date(),
                             weight: weight,
                             reps: reps,

@@ -50,13 +50,15 @@ struct WorkoutGroup: Identifiable {
 @Model
 final class ExerciseLog {
     var workoutID: UUID
+    var name: String
     var date: Date
     var weight: Double
     var reps: Int
     var session: WorkoutSession? // Belongs to workout session -> workoutSession creates logs
     
-    init(workoutID: UUID, date: Date, weight: Double, reps: Int, session: WorkoutSession? = nil) {
+    init(workoutID: UUID, name: String, date: Date, weight: Double, reps: Int, session: WorkoutSession? = nil) {
         self.workoutID = workoutID
+        self.name = name
         self.date = date
         self.weight = weight
         self.reps = reps
@@ -69,14 +71,16 @@ final class ExerciseLog {
 final class WorkoutSession {
     //var id = UUID()
     var workoutGroupID: UUID     // Links back to the selected group
+    var name : String
     var date: Date               // Date recorded to group
     var logs: [ExerciseLog]      // All sets recorded in this session
     var isCompleted: Bool        // Marks if the session was finished
     
     
     // Provide default values for saved time
-    init(workoutGroupID: UUID, date: Date = Date(), logs: [ExerciseLog] = [], isCompleted: Bool = false) {
+    init(workoutGroupID: UUID, name: String,  date: Date = Date(), logs: [ExerciseLog] = [], isCompleted: Bool = false) {
         self.workoutGroupID = workoutGroupID
+        self.name = name
         self.date = date
         self.logs = logs
         self.isCompleted = isCompleted

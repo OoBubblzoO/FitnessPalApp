@@ -29,8 +29,6 @@ struct ContentView: View {
     @Query(sort: \WorkoutSession.date, order: .reverse)
     var sessions: [WorkoutSession]
     
-    //Viewing information
-    @Environment(\.modelContext) private var context
     @Query(sort: \ExerciseLog.date, order: .reverse)
     var logs: [ExerciseLog]
     
@@ -68,13 +66,16 @@ struct ContentView: View {
                             Button("Save Test Log") {
                                 let log = ExerciseLog(
                                     workoutID: UUID(),
+                                    name: "Hammer Curl",
                                     date: Date(),
                                     weight: 135,
                                     reps: 10
                                 )
                                 
-                                context.insert(log)
-                                print("Log has been saved successfully")
+                                modelContext.insert(log)
+                                try? modelContext.save()
+                                print("Saved Log", log.name, log.date, log.weight, log.reps)
+                                print("Logs count, \(logs.count)")
                             }
                             Button("I'm at the gym") {
                                 isSheetPresented.toggle()
@@ -105,9 +106,11 @@ struct ContentView: View {
                     }
                 }
             }
-            Text("Sessions count: \(sessions.count)")
+            Text("Sessions count: \(sessions.count)!")
+            Text("Logs count: \(logs.count)")
             List(logs, id: \.self) { log in
                 VStack(alignment: .leading) {
+                    Text("Name: \(log.name)")
                     Text("Weight: \(log.weight)")
                     Text("Reps: \(log.reps)")
                 }
@@ -173,7 +176,7 @@ struct ContentView: View {
                     Button("Start Workout") {
                         guard let group = selectedGroup else { return }
                         
-                        let newSession = WorkoutSession(workoutGroupID: group.id)
+                        let newSession = WorkoutSession(workoutGroupID: group.id, name: group.title)
                         modelContext.insert(newSession)
                         currentSession = newSession
                         
@@ -204,4 +207,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(WorkoutManager())
+        .modelContainer(for: [WorkoutSession.self , ExerciseLog.self])
 }

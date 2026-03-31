@@ -41,6 +41,7 @@ class WorkoutManager: ObservableObject {
     func startSession(for group: WorkoutGroup) {
         activeSession = WorkoutSession(
             workoutGroupID: group.id,
+            name: group.title,
             date: Date(),
             logs: [],
             isCompleted: false
@@ -53,6 +54,7 @@ class WorkoutManager: ObservableObject {
         
         let log = ExerciseLog(
             workoutID: workout.id,
+            name: workout.name,
             date: Date(),
             weight: weight,
             reps: reps,
