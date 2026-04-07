@@ -28,36 +28,86 @@ import SwiftData
  Change WorkoutGroup, Workout, WorkoutSession, ExerciseLog to classes and @Model
  */
 
+/**
+ April 1, 2026
+TODO: Finish removing the use of WorkoutManager within the app
+ - Switch Workout, and WorkoutGroup to @Model
+ - WorkoutGroup will still hold many of our workouts
+ - WorkoutSession should point DIRECTLY to WorkoutGroup rather than storing only ID
+ - ExerciseLog can point to a Workout
+ 
+ MAIN -> REPLACE MANAGER.WORKOUTGROUPS WITH @QUERY VAR WORKOUTGROUPS: [WORKOUTGROUP] (Needed in addWorkoutView and ContentView
+ CRUD code from workoutManager into methods that use modelContext.insert, delete, save
+ 
+ FLOW SHOULD BE
+ 1) Migrate WorkoutGroup **DONE**
+ 2) Migrate Workout **DONE**
+ 3) Upate contentView to use @Query
+ 4) Update AddWorkoutView save through modelContext
+ 5) Remove WorkoutManager
+ 
+ .ModelContainer should be updated to include both Workout AND workoutGroup
+ **NOTED BY CODEX: Stop using UUID where actual relationships would exist (EX: WorkoutSession should store var workoutGroup: WorkoutGroup? instead of var workoutGroupID**
+ "WHEN SHOULD I POINT DIRECTLY TO SOMETHING?" if one model logically owns or belongs to another model in your app, use relationship. If you only need temporary value or external ID use plain UUID or STRING
+ */
+
 // A single exercise with display info for sets and reps
 // Dynamic list that can be updated
-struct Workout: Identifiable {
-    var id = UUID()
+
+//struct Workout: Identifiable {
+//    var id = UUID()
+//    var name: String
+//    var sets: String
+//    var reps: String
+//}
+//
+@Model
+final class Workout {
     var name: String
     var sets: String
     var reps: String
+    
+    init(name: String, sets: String, reps: String ){
+        self.name = name
+        self.sets = sets
+        self.reps = reps
+    }
 }
+
 
 // A named group of workouts shown together in the UI
 // each group has name and array of workout(s)
-struct WorkoutGroup: Identifiable {
-    var id = UUID()
+
+//struct WorkoutGroup: Identifiable {
+//    var id = UUID()
+//    var title: String
+//    var workouts: [Workout]
+//}
+
+@Model
+final class WorkoutGroup {
     var title: String
-    var workouts: [Workout]
+    var workouts: [Workout] = []
+    
+    init(title: String, workouts: [Workout] = [] ){
+        self.title = title
+        self.workouts = workouts
+    }
 }
 
 // A record of what you lifted for a workout on a date
 // on this date workout was performed with this weight and reps
 @Model
 final class ExerciseLog {
-    var workoutID: UUID
+    var workout: Workout?
     var name: String
     var date: Date
     var weight: Double
     var reps: Int
     var session: WorkoutSession? // Belongs to workout session -> workoutSession creates logs
     
-    init(workoutID: UUID, name: String, date: Date, weight: Double, reps: Int, session: WorkoutSession? = nil) {
-        self.workoutID = workoutID
+    init(workout: Workout?, name: String, date: Date, weight: Double, reps: Int, session: WorkoutSession? = nil) {
+        self.workout = workout
         self.name = name
         self.date = date
         self.weight = weight
@@ -70,7 +120,8 @@ final class ExerciseLog {
 @Model
 final class WorkoutSession {
     //var id = UUID()
-    var workoutGroupID: UUID     // Links back to the selected group
+    //var workoutGroupID: UUID     // Links back to the selected group
+    var workoutGroup: WorkoutGroup?
     var name : String
     var date: Date               // Date recorded to group
     var logs: [ExerciseLog]      // All sets recorded in this session
@@ -78,8 +129,8 @@ final class WorkoutSession {
     
     
     // Provide default values for saved time
-    init(workoutGroupID: UUID, name: String,  date: Date = Date(), logs: [ExerciseLog] = [], isCompleted: Bool = false) {
-        self.workoutGroupID = workoutGroupID
+    init(workoutGroup: WorkoutGroup?, name: String,  date: Date = Date(), logs: [ExerciseLog] = [], isCompleted: Bool = false) {
+        self.workoutGroup = workoutGroup
         self.name = name
         self.date = date
         self.logs = logs

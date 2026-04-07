@@ -12,7 +12,7 @@ struct ContentView: View {
     
     // MARK: Environment
     
-    @EnvironmentObject var manager: WorkoutManager
+    @Query var workoutGroups: [WorkoutGroup]
     
     // Controls the view of creating new workout
     @State private var isWorkoutCreating: Bool = false
@@ -63,9 +63,11 @@ struct ContentView: View {
                             .foregroundStyle(Color("AccentColor"))
                         
                         VStack(spacing: 14) {
+                            
+                            let workout = Workout(name: "Hammer Curl", sets: "3", reps: "10-15")
                             Button("Save Test Log") {
                                 let log = ExerciseLog(
-                                    workoutID: UUID(),
+                                    workout: workout,
                                     name: "Hammer Curl",
                                     date: Date(),
                                     weight: 135,
@@ -134,9 +136,9 @@ struct ContentView: View {
                 
                 // Lists workoutGroups for user to select from
                 List {
-                    ForEach(manager.workoutGroups) { workoutGroup in
+                    ForEach(workoutGroups) { workoutGroup in
                         
-                        let isSelected = selectedGroup?.id == workoutGroup.id
+                        let isSelected = selectedGroup?.title == workoutGroup.title
                         
                         Section(header: Text(workoutGroup.title)
                             .foregroundStyle(Color("AccentColor"))) {
@@ -176,7 +178,7 @@ struct ContentView: View {
                     Button("Start Workout") {
                         guard let group = selectedGroup else { return }
                         
-                        let newSession = WorkoutSession(workoutGroupID: group.id, name: group.title)
+                        let newSession = WorkoutSession(workoutGroup: group, name: group.title)
                         modelContext.insert(newSession)
                         currentSession = newSession
                         
@@ -206,6 +208,7 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environmentObject(WorkoutManager())
-        .modelContainer(for: [WorkoutSession.self , ExerciseLog.self])
+    
+        // load models I want stored and queried
+        .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self , ExerciseLog.self])
 }

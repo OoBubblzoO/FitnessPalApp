@@ -43,7 +43,7 @@ struct ExerciseDetailView: View {
                     if let weight = Double(weightInput),
                        let reps = Int(repsInput) {
                         let log = ExerciseLog(
-                            workoutID: workout.id,
+                            workout: workout,
                             name: workout.name,
                             date: Date(),
                             weight: weight,
@@ -82,7 +82,7 @@ struct ExerciseDetailView: View {
     
     private var lastCompletedLog: ExerciseLog? {
         logs.first { log in
-            log.workoutID == workout.id && (log.session?.isCompleted ?? false)
+            log.workout == workout && (log.session?.isCompleted ?? false)
         }
     }
     

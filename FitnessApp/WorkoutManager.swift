@@ -40,7 +40,7 @@ class WorkoutManager: ObservableObject {
     
     func startSession(for group: WorkoutGroup) {
         activeSession = WorkoutSession(
-            workoutGroupID: group.id,
+            workoutGroup: group,
             name: group.title,
             date: Date(),
             logs: [],
@@ -53,7 +53,7 @@ class WorkoutManager: ObservableObject {
         //guard var session = activeSession else { return }
         
         let log = ExerciseLog(
-            workoutID: workout.id,
+            workout: workout,
             name: workout.name,
             date: Date(),
             weight: weight,
@@ -79,7 +79,7 @@ class WorkoutManager: ObservableObject {
     func lastCompletedLog(for workout: Workout) -> ExerciseLog? {
         completedSessions
             .flatMap { $0.logs }
-            .filter { $0.workoutID == workout.id }
+            .filter { $0.workout == workout }
             .sorted { $0.date > $1.date }
             .first
     }
@@ -93,19 +93,19 @@ class WorkoutManager: ObservableObject {
         workoutGroups.append(newGroup)
     }
     
-    func addWorkout(to groupID: UUID, name: String, reps: String, sets: String){
+    func addWorkout(to group: WorkoutGroup, name: String, reps: String, sets: String){
         let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanSets = sets.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanReps = reps.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard !cleanName.isEmpty, !cleanSets.isEmpty, !cleanReps.isEmpty else { return } // Exit if empty
-        guard let groupIndex = workoutGroups.firstIndex(where: { $0.id == groupID }) else { return }
         
         let newWorkout = Workout(name: cleanName, sets: cleanSets, reps: cleanReps)
-        workoutGroups[groupIndex].workouts.append(newWorkout)
+        group.workouts.append(newWorkout)
         
         
         
     }
 }
+
 

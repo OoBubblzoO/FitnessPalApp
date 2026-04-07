@@ -20,8 +20,7 @@ struct FitnessAppApp: App {
             ContentView()
                 .environmentObject(manager)
         }
-        .modelContainer(for: [WorkoutSession.self , ExerciseLog.self]) // creates database
-
+        .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self , ExerciseLog.self])
     }
 }
 

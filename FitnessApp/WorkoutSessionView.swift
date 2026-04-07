@@ -77,7 +77,7 @@ struct WorkoutSessionView: View {
     private var latestCompletedSessionForGroup: WorkoutSession? {
         sessions
             .filter { completedSession in
-                completedSession.isCompleted && completedSession.workoutGroupID == workoutGroup.id
+                completedSession.isCompleted && completedSession.workoutGroup == workoutGroup
             }
             .first
     }
@@ -104,9 +104,7 @@ struct WorkoutSessionView: View {
     
     // Logs store only workout IDs so this maps each saved log back to a display name. TY
     private func workoutName(for log: ExerciseLog) -> String {
-        workoutGroup.workouts
-            .first { $0.id == log.workoutID }?
-            .name ?? "Exercise"
+        log.workout?.name ?? "Exercise"
     }
     
     // Format to 1 dec
@@ -126,3 +124,4 @@ struct WorkoutSessionView: View {
         )
     }
 }
+
