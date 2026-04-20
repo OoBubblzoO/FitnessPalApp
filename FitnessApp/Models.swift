@@ -10,57 +10,7 @@ import SwiftUI
 import SwiftData
 
 
-// MARK: UPDATE TO BE ABLE TO USE SWIFTDATA
-
-/**
- This means we're going to change the struct to a class. Struct is a value type that gets copied when changed. Class references the same object that's shared and updated
- Struct - a screenshot
- Class - live document that can be edited
- .modelContext connects to database  *DO NOT FORGET* (pen)
- context.insert writing page
- Query going to allow to retrieve from Database
- 
- modelContainer - database
- modelContext - talk  to it
- @Model - what's getting stored
- @Query - how to read
- 
- Change WorkoutGroup, Workout, WorkoutSession, ExerciseLog to classes and @Model
- */
-
-/**
- April 1, 2026
-TODO: Finish removing the use of WorkoutManager within the app
- - Switch Workout, and WorkoutGroup to @Model
- - WorkoutGroup will still hold many of our workouts
- - WorkoutSession should point DIRECTLY to WorkoutGroup rather than storing only ID
- - ExerciseLog can point to a Workout
- 
- MAIN -> REPLACE MANAGER.WORKOUTGROUPS WITH @QUERY VAR WORKOUTGROUPS: [WORKOUTGROUP] (Needed in addWorkoutView and ContentView
- CRUD code from workoutManager into methods that use modelContext.insert, delete, save
- 
- FLOW SHOULD BE
- 1) Migrate WorkoutGroup **DONE**
- 2) Migrate Workout **DONE**
- 3) Upate contentView to use @Query
- 4) Update AddWorkoutView save through modelContext
- 5) Remove WorkoutManager
- 
- .ModelContainer should be updated to include both Workout AND workoutGroup
- **NOTED BY CODEX: Stop using UUID where actual relationships would exist (EX: WorkoutSession should store var workoutGroup: WorkoutGroup? instead of var workoutGroupID**
- "WHEN SHOULD I POINT DIRECTLY TO SOMETHING?" if one model logically owns or belongs to another model in your app, use relationship. If you only need temporary value or external ID use plain UUID or STRING
- */
-
 // A single exercise with display info for sets and reps
-// Dynamic list that can be updated
-
-//struct Workout: Identifiable {
-//    var id = UUID()
-//    var name: String
-//    var sets: String
-//    var reps: String
-//}
-//
 @Model
 final class Workout {
     var name: String
@@ -77,13 +27,6 @@ final class Workout {
 
 // A named group of workouts shown together in the UI
 // each group has name and array of workout(s)
-
-//struct WorkoutGroup: Identifiable {
-//    var id = UUID()
-//    var title: String
-//    var workouts: [Workout]
-//}
-
 @Model
 final class WorkoutGroup {
     var title: String
@@ -119,8 +62,6 @@ final class ExerciseLog {
 // A full session ties logs to a group on specific date
 @Model
 final class WorkoutSession {
-    //var id = UUID()
-    //var workoutGroupID: UUID     // Links back to the selected group
     var workoutGroup: WorkoutGroup?
     var name : String
     var date: Date               // Date recorded to group
@@ -181,9 +122,9 @@ struct FitnessButtonStyle: ButtonStyle {
     }
 }
 
-// Lighter outlined button style
+// Lighter outlined button
 struct FitnessSecondaryButtonStyle: ButtonStyle {
-    // Same button builder, different look
+    // Same button, different look
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
@@ -216,7 +157,7 @@ extension ButtonStyle where Self == FitnessButtonStyle {
         )
     }
 
-    // Accent version for stronger emphasis
+    // Accent version
     static func fitnessAccent() -> FitnessButtonStyle {
         FitnessButtonStyle(
             fillColor: Color("AccentColor"),

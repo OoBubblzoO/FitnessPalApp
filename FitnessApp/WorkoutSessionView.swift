@@ -114,14 +114,20 @@ struct WorkoutSessionView: View {
 }
 
 #Preview {
-    let manager = WorkoutManager()
+    let previewWorkoutGroup = WorkoutGroup(
+        title: "Lower (quad/hinges)",
+        workouts: [
+            Workout(name: "Squat", sets: "3", reps: "6-8"),
+            Workout(name: "RDL", sets: "3", reps: "6-10")
+        ]
+    )
 
     return NavigationStack {
         WorkoutSessionView(
-            workoutGroup: manager.workoutGroups[0],
+            workoutGroup: previewWorkoutGroup,
             currentSession: nil,
             onWorkoutCompleted: {}
         )
     }
+    .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self, ExerciseLog.self])
 }
-

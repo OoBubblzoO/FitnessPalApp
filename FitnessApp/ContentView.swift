@@ -12,7 +12,8 @@ struct ContentView: View {
     
     // MARK: Environment
     
-    @Query var workoutGroups: [WorkoutGroup]
+    // SwiftData is now the source of truth for the workout list shown in the sheet.
+    @Query(sort: \WorkoutGroup.title) var workoutGroups: [WorkoutGroup]
     
     // Controls the view of creating new workout
     @State private var isWorkoutCreating: Bool = false
@@ -108,16 +109,9 @@ struct ContentView: View {
                     }
                 }
             }
-            Text("Sessions count: \(sessions.count)!")
-            Text("Logs count: \(logs.count)")
-            List(logs, id: \.self) { log in
-                VStack(alignment: .leading) {
-                    Text("Name: \(log.name)")
-                    Text("Weight: \(log.weight)")
-                    Text("Reps: \(log.reps)")
-                }
-            }
-            .frame(height: 200)
+        }
+        .task {
+            seedDefaultWorkoutGroupsIfNeeded()
         }
     }
     
@@ -206,9 +200,30 @@ struct ContentView: View {
     
 }
 
+private extension ContentView {
+    func seedDefaultWorkoutGroupsIfNeeded() {
+        // Seed starter group only when the database is empty so testing always has one list entry.
+        guard workoutGroups.isEmpty else { return }
+        
+        let defaultWorkoutGroup = WorkoutGroup(
+            title: "Lower (quad/hinges)",
+            workouts: [
+                Workout(name: "Squat", sets: "3", reps: "6-8"),
+                Workout(name: "RDL", sets: "3", reps: "6-10"),
+                Workout(name: "Single-leg Press", sets: "3", reps: "10-12"),
+                Workout(name: "Leg Curl", sets: "3", reps: "8-12"),
+                Workout(name: "Calf Raise", sets: "3", reps: "10-15")
+            ]
+        )
+        
+        modelContext.insert(defaultWorkoutGroup)
+        try? modelContext.save()
+    }
+}
+
 #Preview {
     ContentView()
     
-        // load models I want stored and queried
+        // Load models I want stored and queried
         .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self , ExerciseLog.self])
 }

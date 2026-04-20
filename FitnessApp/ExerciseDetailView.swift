@@ -70,7 +70,7 @@ struct ExerciseDetailView: View {
                 Spacer()
             }
         }
-        // toolbox allows customization to navigation titles
+        // Toolbox allows customization to navigation titles
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {

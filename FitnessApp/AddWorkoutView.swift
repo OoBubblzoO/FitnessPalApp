@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AddWorkoutView: View {
 
-    @EnvironmentObject var manager: WorkoutManager
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     // Temp form, gets converted to Workout later
@@ -56,6 +57,7 @@ struct AddWorkoutView: View {
                     .buttonStyle(FitnessSecondaryButtonStyle())
                     
                     Button("Save workout") {
+                        let groupTitle = workoutGroupNameInput.trimmingCharacters(in: .whitespacesAndNewlines)
                         let workouts = draftWorkouts
                         // Convert draft row to final WorkoutObject (Builds workout from temp data)
                             .map {
@@ -70,12 +72,23 @@ struct AddWorkoutView: View {
                                 !$0.name.isEmpty && !$0.sets.isEmpty && !$0.reps.isEmpty
                             }
                         
-                        manager.addWorkoutGroup(title: workoutGroupNameInput, workouts: workouts)
+                        // Save the new group directly to SwiftData so @Query views update automatically.
+                        let newWorkoutGroup = WorkoutGroup(title: groupTitle, workouts: workouts)
+                        modelContext.insert(newWorkoutGroup)
+                        try? modelContext.save()
                         dismiss()
                     }
                     .buttonStyle(.fitnessPrimary())
                     .opacity(workoutGroupNameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.45 : 1)
-                    .disabled(workoutGroupNameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    // Don't allow save if pre-req missing
+                    .disabled(
+                        workoutGroupNameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        || draftWorkouts.allSatisfy {
+                            $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            || $0.sets.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            || $0.reps.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        }
+                    )
                     
                     Spacer()
                 }
@@ -88,5 +101,5 @@ struct AddWorkoutView: View {
 
 #Preview {
     AddWorkoutView()
-        .environmentObject(WorkoutManager())
+        .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self, ExerciseLog.self])
 }

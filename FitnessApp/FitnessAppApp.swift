@@ -12,15 +12,11 @@ import SwiftData
 
 @main
 struct FitnessAppApp: App {
-    
-    // 1 instance and keep alive with the app
-    @StateObject private var manager = WorkoutManager()
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(manager)
         }
+        // Register every SwiftData model that the app reads or saves.
         .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self , ExerciseLog.self])
     }
 }
-
