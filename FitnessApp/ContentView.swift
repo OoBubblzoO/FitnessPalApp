@@ -19,10 +19,17 @@ struct ContentView: View {
     @State private var isWorkoutCreating: Bool = false
     // Controls the sheet that lets you pick a workout group
     @State private var isSheetPresented: Bool = false
+    // Controls Cardio Sheet
+    @State private var isCardioSheetPresented: Bool = false
     // The group the user tapped in the list
     @State private var selectedGroup: WorkoutGroup? = nil
     // The group currently being performed in a session
     @State private var activeGroup: WorkoutGroup? = nil
+    
+    @State private var cardioType: String = ""
+    @State private var cardioDistance: String = ""
+    @State private var cardioTime: String = ""
+    
     
     // Starting sessions
     @Environment(\.modelContext) private var modelContext
@@ -80,6 +87,12 @@ struct ContentView: View {
                                 print("Saved Log", log.name, log.date, log.weight, log.reps)
                                 print("Logs count, \(logs.count)")
                             }
+                            Button("Record cardio session"){
+                                isCardioSheetPresented.toggle()
+                                print("Toggling Cardio Session")
+                            }
+                            .buttonStyle(.fitnessPrimary())
+                            
                             Button("I'm at the gym") {
                                 isSheetPresented.toggle()
                             }
@@ -106,6 +119,9 @@ struct ContentView: View {
                     .padding()
                     .sheet(isPresented: $isSheetPresented) {
                         workoutSelectionSheet
+                    }
+                    .sheet(isPresented: $isCardioSheetPresented){
+                        CardioSessionSheet
                     }
                 }
             }
@@ -143,18 +159,19 @@ struct ContentView: View {
                                     
                                     Text(workout.name)
                                         .font(.headline)
+                                        .foregroundStyle(Color("BackgroundColor")) // Force Dark Text
                                     
                                     HStack(spacing: 16) {
                                         Text("Sets: \(workout.sets)")
                                         Text("Reps: \(workout.reps)")
                                     }
                                     .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color("BackgroundColor").opacity(0.72)) // Froce Dark Text but softer
                                 }
                                 .contentShape(Rectangle())
                                 .listRowBackground(
                                     isSelected
-                                    ? Color.accentColor.opacity(0.15)
+                                    ? Color("PrimaryColor")
                                     : Color("AccentColor")
                                 ) // Highlight the selected group's rows
                                 .onTapGesture {
@@ -198,9 +215,83 @@ struct ContentView: View {
         }
     }
     
+    // CARDIO VIEW
+    private var CardioSessionSheet: some View {
+        ZStack{
+            Color("BackgroundColor")
+                .ignoresSafeArea()
+            VStack(spacing: 16) {
+                Text("ENTER YOUR CARDIO")
+                    .font(.system(size: 20, weight: .medium))
+                    .bold()
+                    .padding(12)
+                    .foregroundStyle(Color("AccentColor"))
+                HStack {
+                    TextField("Type", text: $cardioType)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("Distance", text: $cardioDistance)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("Duration", text: $cardioTime)
+                        .textFieldStyle(.roundedBorder)
+                }
+                    
+                Button("Save Cardio") {
+                    guard
+                        !cardioType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                        !cardioDistance.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                        let distance = Double(cardioDistance.trimmingCharacters(in: .whitespacesAndNewlines)),
+                        let durationSeconds = parsedDurationSeconds(from: cardioTime)
+                    else {
+                        return
+                    }
+                    let cardioSession = CardioSession(
+                        name: cardioType.trimmingCharacters(in: .whitespacesAndNewlines),
+                        distance: distance,
+                        durationSeconds: durationSeconds,
+                        date: Date()
+                        
+                    )
+                    
+                    modelContext.insert(cardioSession)
+                    try? modelContext.save()
+                    
+                    // Reset fields upon opening 
+                    cardioType = ""
+                    cardioDistance = ""
+                    cardioTime = ""
+                    isCardioSheetPresented = false
+                }
+                .buttonStyle(FitnessSecondaryButtonStyle())
+                
+                Spacer()
+                
+            }
+            .padding()
+        }
+    }
 }
 
+
+
 private extension ContentView {
+    
+    func parsedDurationSeconds(from text: String) -> Int? {
+        let parts = text.split(separator: ":")
+        
+        guard parts.count == 3,
+              let hours = Int(parts[0]),
+              let minutes = Int(parts[1]),
+              let seconds = Int(parts[2]),
+              minutes >= 0, minutes < 60,
+              seconds >= 0, seconds < 60
+        else {
+            return nil
+        }
+        
+        return (hours * 3600) + (minutes * 60) + seconds
+    }
+    
     func seedDefaultWorkoutGroupsIfNeeded() {
         // Seed starter group only when the database is empty so testing always has one list entry.
         guard workoutGroups.isEmpty else { return }
@@ -223,6 +314,7 @@ private extension ContentView {
 
 #Preview {
     ContentView()
+        .preferredColorScheme(.dark)
     
         // Load models I want stored and queried
         .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self , ExerciseLog.self])

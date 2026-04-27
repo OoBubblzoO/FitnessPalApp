@@ -79,6 +79,31 @@ final class WorkoutSession {
     }
 }
 
+// Class to record some sort of cardio
+@Model
+final class CardioSession {
+    var name: String
+    var distance: Double
+    var durationSeconds: Int = 0
+    var date:  Date
+    
+    // Format 
+    var formattedDuration: String {
+        let hours = durationSeconds / 3600
+        let minutes = (durationSeconds % 3600) / 60
+        let seconds = durationSeconds % 60
+        
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds) // Format time for 00:00:00
+    }
+    
+    init(name: String, distance: Double, durationSeconds: Int = 0, date: Date = Date()){
+        self.name = name
+        self.distance = distance
+        self.durationSeconds = durationSeconds
+        self.date = date
+    }
+}
+
 // Filled button style
 struct FitnessButtonStyle: ButtonStyle {
     // Background color

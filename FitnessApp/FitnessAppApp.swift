@@ -17,6 +17,6 @@ struct FitnessAppApp: App {
             ContentView()
         }
         // Register every SwiftData model that the app reads or saves.
-        .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self , ExerciseLog.self])
+        .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self , ExerciseLog.self, CardioSession.self])
     }
 }

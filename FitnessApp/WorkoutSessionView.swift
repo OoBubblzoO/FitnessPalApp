@@ -36,13 +36,14 @@ struct WorkoutSessionView: View {
                             VStack(alignment: .leading) {
                                 Text(workout.name)
                                     .font(.headline)
+                                    .foregroundStyle(Color("BackgroundColor"))
                                 
                                 HStack(spacing: 16) {
                                     Text("Sets: \(workout.sets)")
                                     Text("Reps: \(workout.reps)")
                                 }
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color("BackgroundColor").opacity(0.72))
                                 
                             }
                             .padding(.vertical, 8)
@@ -60,6 +61,14 @@ struct WorkoutSessionView: View {
                 } message: {
                     Text(completionSummary)
                 }
+                
+                Button("Add Cardio") {
+                    
+                }
+                .buttonStyle(.fitnessPrimary())
+                .padding(.horizontal)
+                .padding(.bottom)
+                    
                 
                 Button("Workout Complete") {
                     guard let currentSession else { return }
@@ -114,6 +123,7 @@ struct WorkoutSessionView: View {
 }
 
 #Preview {
+    
     let previewWorkoutGroup = WorkoutGroup(
         title: "Lower (quad/hinges)",
         workouts: [
@@ -123,11 +133,14 @@ struct WorkoutSessionView: View {
     )
 
     return NavigationStack {
+        
         WorkoutSessionView(
             workoutGroup: previewWorkoutGroup,
             currentSession: nil,
             onWorkoutCompleted: {}
         )
     }
+    .preferredColorScheme(.dark)
+
     .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self, ExerciseLog.self])
 }

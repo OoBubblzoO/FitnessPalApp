@@ -5,6 +5,18 @@
 //  Created by Cheeto on 3/24/26.
 //
 
+/*
+    TODO: ADD EDIT BUTTTON TO EDIT / DELETE WORKOUTS / RUNS
+    - Start with editing cardio sheet
+    - Change name, distqance, duration
+    - Allow save / deletion
+ 
+    - Tap log in workout logs
+    - Open Edit Log sheet
+    - Change weight/reps
+    - Save / delete
+ */
+
 import SwiftUI
 import SwiftData
 
@@ -14,6 +26,9 @@ struct CalendarView: View {
     @Query(sort: \WorkoutSession.date, order: .reverse)
     private var sessions: [WorkoutSession]
 
+    
+    @Query(sort: \CardioSession.date, order: .reverse)
+    private var cardioSessions: [CardioSession]
     // Store month being shown
     @State private var displayedMonth: Date = Date()
     
@@ -54,6 +69,13 @@ struct CalendarView: View {
    // take saved WorkoutSessions group by date | startOfDay so times don't mess up
     var sessionsByDay: [Date: [WorkoutSession]] {
         Dictionary(grouping: sessions) { session in
+            calendar.startOfDay(for: session.date)
+        }
+    }
+    
+    // take saved CardioSessions group by datae | startOfDay so times don't mess up
+    var cardioSessionsByDay: [Date: [CardioSession]] {
+        Dictionary(grouping: cardioSessions) { session in
             calendar.startOfDay(for: session.date)
         }
     }
@@ -160,7 +182,12 @@ struct CalendarView: View {
                     
                     // Draws days
                     ForEach(daysInMonth, id: \.self) { date in
-                        let hasWorkout = sessionsByDay[calendar.startOfDay(for: date )] != nil
+                       // let hasWorkout = sessionsByDay[calendar.startOfDay(for: date )] != nil
+                        
+                        let day = calendar.startOfDay(for: date)
+                        let hasWorkout = sessionsByDay[day] != nil
+                        let hasCardio = cardioSessionsByDay[day] != nil
+                        let hasActivity = hasWorkout || hasCardio
                         
                         Button {
                             selectedDate =  date
@@ -173,14 +200,14 @@ struct CalendarView: View {
                             // Normal days get subtle background, Workout days get stronger fill + border + dot
                                 .background(
                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(hasWorkout ? Color("PrimaryColor").opacity(0.12) : Color.white.opacity(0.05)
+                                        .fill(hasActivity ? Color("PrimaryColor").opacity(0.12) : Color.white.opacity(0.05)
                                              )
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .stroke(hasWorkout ? Color("PrimaryColor") : Color.clear, lineWidth: 2)
+                                                .stroke(hasActivity ? Color("PrimaryColor") : Color.clear, lineWidth: 2)
                                         )
                                         .overlay(alignment: .bottom) {
-                                            if hasWorkout {
+                                            if hasActivity {
                                                 Capsule()
                                                     .fill(Color("PrimaryColor"))
                                                     .frame(width: 16, height: 4)
@@ -210,6 +237,7 @@ struct CalendarView: View {
                 
                 // If selected day has sessions USE else use empty array
                 let selectedSessions = sessionsByDay[selectedDay] ?? []
+                let selectedCardioSessions = cardioSessionsByDay[selectedDay] ?? []
                 ZStack {
                     Color("BackgroundColor")
                         .ignoresSafeArea()
@@ -220,10 +248,12 @@ struct CalendarView: View {
                                     .font(.headline)
                                     .foregroundStyle(Color("PrimaryColor"))
                             }
-                            if selectedSessions.isEmpty {
-                                Text("No workout session was saved on this day.")
+                            if selectedSessions.isEmpty && selectedCardioSessions.isEmpty {
+                                Text("No activity was saved on this day.")
                                     .foregroundStyle(Color("AccentColor"))
-                            } else {
+                            }
+                            
+                            if !selectedSessions.isEmpty {
                                 ForEach(selectedSessions) { session in
                                     Section {
 //                                        if let groupTitle = session.workoutGroup?.title {
@@ -255,6 +285,26 @@ struct CalendarView: View {
                                     
                                 }
                             }
+                                
+                            if !selectedCardioSessions.isEmpty {
+                                ForEach(selectedCardioSessions) { cardioSession in
+                                    Section {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("\(cardioSession.distance, specifier: "%.2f") miles")
+                                                .font(.subheadline)
+                                                .foregroundStyle(Color("PrimaryColor"))
+                                            
+                                            Text(cardioSession.formattedDuration)
+                                                .font(.subheadline.monospacedDigit())
+                                                .foregroundStyle(Color("AccentColor"))
+                                        }
+                                        .padding(.vertical, 4)
+                                    } header: {
+                                        Text(cardioSession.name)
+                                            .foregroundStyle(Color("AccentColor"))
+                                    }
+                                }
+                            }
                         }
                     }
                     .scrollContentBackground(.hidden)
@@ -269,5 +319,5 @@ struct CalendarView: View {
 
 #Preview {
     CalendarView()
-        .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self, ExerciseLog.self])
+        .modelContainer(for: [WorkoutGroup.self, Workout.self, WorkoutSession.self, ExerciseLog.self, CardioSession.self])
 }
