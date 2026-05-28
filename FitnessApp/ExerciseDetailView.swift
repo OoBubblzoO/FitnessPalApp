@@ -80,9 +80,10 @@ struct ExerciseDetailView: View {
             }
         }    }
     
+    // Look for most completed log w same exercise name 
     private var lastCompletedLog: ExerciseLog? {
         logs.first { log in
-            log.workout == workout && (log.session?.isCompleted ?? false)
+            log.name == workout.name && (log.session?.isCompleted ?? false) // Check to see if there is a current session and if it's completed (if nil = false)
         }
     }
     
