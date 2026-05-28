@@ -21,10 +21,14 @@ import SwiftUI
 import SwiftData
 
 struct CalendarView: View {
+    @Environment(\.modelContext) private var modelContext
 
     // Keep the workout sessions query because the finished calendar will use it.
     @Query(sort: \WorkoutSession.date, order: .reverse)
     private var sessions: [WorkoutSession]
+
+    @Query(sort: \WorkoutGroup.title)
+    private var workoutGroups: [WorkoutGroup]
 
     
     @Query(sort: \CardioSession.date, order: .reverse)
@@ -244,9 +248,37 @@ struct CalendarView: View {
                     NavigationStack {
                         List {
                             Section {
-                                Text(selectedDay.formatted(date: .complete, time: .omitted))
-                                    .font(.headline)
-                                    .foregroundStyle(Color("PrimaryColor"))
+                                HStack(alignment: .top, spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(selectedDay.formatted(date: .complete, time: .omitted))
+                                            .font(.headline)
+                                            .foregroundStyle(Color("PrimaryColor"))
+
+                                        Text("Add a workout for this date or swipe a saved entry to delete it.")
+                                            .font(.footnote)
+                                            .foregroundStyle(Color("AccentColor"))
+                                    }
+
+                                    Spacer()
+
+                                    Menu {
+                                        if workoutGroups.isEmpty {
+                                            Text("Create a workout group first")
+                                        } else {
+                                            ForEach(workoutGroups) { workoutGroup in
+                                                Button(workoutGroup.title) {
+                                                    addWorkoutSession(workoutGroup, on: selectedDay)
+                                                }
+                                            }
+                                        }
+                                        
+                                    } label: {
+                                        Label("Add", systemImage: "plus.circle.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title3.weight(.semibold))
+                                            .foregroundStyle(Color("PrimaryColor"))
+                                    }
+                                }
                             }
                             if selectedSessions.isEmpty && selectedCardioSessions.isEmpty {
                                 Text("No activity was saved on this day.")
@@ -254,42 +286,53 @@ struct CalendarView: View {
                             }
                             
                             if !selectedSessions.isEmpty {
-                                ForEach(selectedSessions) { session in
-                                    Section {
-//                                        if let groupTitle = session.workoutGroup?.title {
-//                                            Text("Group: \(groupTitle)")
-//                                                .font(.subheadline)
-//                                                .foregroundStyle(Color("AccentColor"))
-//                                        }
-                                        if session.logs.isEmpty {
-                                            Text("No exercise logs recorded.")
-                                                .foregroundStyle(Color("AccentColor"))
-                                        } else {
-                                            ForEach(session.logs) { log in
-                                                VStack(alignment: .leading, spacing: 4) {
-                                                    Text(log.name)
-                                                        .font(.headline)
-                                                        .foregroundStyle(Color("PrimaryColor"))
-                                                    
-                                                    Text("\(log.weight, specifier: "%.1f") lbs x \(log.reps) reps")
-                                                        .font(.subheadline)
-                                                        .foregroundStyle(Color("AccentColor"))
+                                Section("Workout Groups") {
+                                    ForEach(selectedSessions) { session in
+                                        VStack(alignment: .leading, spacing: 10) {
+                                            Text(session.name)
+                                                .font(.headline)
+                                                .foregroundStyle(Color("PrimaryColor"))
+
+                                            if session.logs.isEmpty {
+                                                Text("No exercise logs recorded.")
+                                                    .foregroundStyle(Color("AccentColor"))
+                                            } else {
+                                                ForEach(session.logs) { log in
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        Text(log.name)
+                                                            .font(.headline)
+                                                            .foregroundStyle(Color("PrimaryColor"))
+                                                        
+                                                        Text("\(log.weight, specifier: "%.1f") lbs x \(log.reps) reps")
+                                                            .font(.subheadline)
+                                                            .foregroundStyle(Color("AccentColor"))
+                                                    }
+                                                    .padding(.vertical, 4)
                                                 }
-                                                .padding(.vertical, 4)
                                             }
                                         }
-                                    } header: {
-                                        Text(session.name)
-                                            .foregroundStyle(Color("AccentColor"))
+                                        
+                                        // Swipe to delete Workout session 
+                                        .padding(.vertical, 4)
+                                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                            Button(role: .destructive) {
+                                                deleteWorkoutSession(session)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
                                     }
-                                    
                                 }
                             }
                                 
                             if !selectedCardioSessions.isEmpty {
-                                ForEach(selectedCardioSessions) { cardioSession in
-                                    Section {
+                                Section("Cardio") {
+                                    ForEach(selectedCardioSessions) { cardioSession in
                                         VStack(alignment: .leading, spacing: 4) {
+                                            Text(cardioSession.name)
+                                                .font(.headline)
+                                                .foregroundStyle(Color("PrimaryColor"))
+
                                             Text("\(cardioSession.distance, specifier: "%.2f") miles")
                                                 .font(.subheadline)
                                                 .foregroundStyle(Color("PrimaryColor"))
@@ -298,10 +341,16 @@ struct CalendarView: View {
                                                 .font(.subheadline.monospacedDigit())
                                                 .foregroundStyle(Color("AccentColor"))
                                         }
+                                        
+                                        // Allow deletion on cardio sessions
                                         .padding(.vertical, 4)
-                                    } header: {
-                                        Text(cardioSession.name)
-                                            .foregroundStyle(Color("AccentColor"))
+                                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                            Button(role: .destructive) {
+                                                deleteCardioSession(cardioSession)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -314,6 +363,37 @@ struct CalendarView: View {
                 .presentationDetents([.medium, .large])
             }
         }
+    }
+
+    
+    // Functions to allow addition or deletion of data on dates in case one date was not logged
+    private func addWorkoutSession(_ workoutGroup: WorkoutGroup, on date: Date) {
+        let newSession = WorkoutSession(
+            workoutGroup: workoutGroup,
+            name: workoutGroup.title,
+            date: date
+        )
+
+        modelContext.insert(newSession)
+        try? modelContext.save()
+    }
+
+    private func deleteWorkoutSession(_ session: WorkoutSession) {
+        for log in session.logs {
+            modelContext.delete(log)
+        }
+        
+        for workout in session.additionalWorkouts {
+            modelContext.delete(workout)
+        }
+
+        modelContext.delete(session)
+        try? modelContext.save()
+    }
+
+    private func deleteCardioSession(_ cardioSession: CardioSession) {
+        modelContext.delete(cardioSession)
+        try? modelContext.save()
     }
 }
 

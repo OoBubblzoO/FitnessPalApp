@@ -66,15 +66,17 @@ final class WorkoutSession {
     var name : String
     var date: Date               // Date recorded to group
     var logs: [ExerciseLog]      // All sets recorded in this session
+    var additionalWorkouts: [Workout] // Exercises added only for this session
     var isCompleted: Bool        // Marks if the session was finished
     
     
     // Provide default values for saved time
-    init(workoutGroup: WorkoutGroup?, name: String,  date: Date = Date(), logs: [ExerciseLog] = [], isCompleted: Bool = false) {
+    init(workoutGroup: WorkoutGroup?, name: String, date: Date = Date(), logs: [ExerciseLog] = [], additionalWorkouts: [Workout] = [], isCompleted: Bool = false) {
         self.workoutGroup = workoutGroup
         self.name = name
         self.date = date
         self.logs = logs
+        self.additionalWorkouts = additionalWorkouts
         self.isCompleted = isCompleted
     }
 }
