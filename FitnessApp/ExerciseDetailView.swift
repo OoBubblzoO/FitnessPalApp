@@ -7,6 +7,8 @@
 import SwiftUI
 import SwiftData
 
+
+// TODO: When a workout set is completed give some sort of confirmation / view to the logging process (EXAMPLE: Allow to be seen unerneath)
 struct ExerciseDetailView: View {
     
     let workout: Workout
@@ -57,6 +59,8 @@ struct ExerciseDetailView: View {
                         weightInput = ""
                         repsInput = ""
                     }
+                    
+                    // Change here to give some sort of notification to user
                     print("Weight and reps have been saved...")
                 }
                 .buttonStyle(.fitnessPrimary())
@@ -65,6 +69,28 @@ struct ExerciseDetailView: View {
                 if let lastLog = lastCompletedLog {
                     Text("Last time: \(formattedWeight(lastLog.weight)) lbs x \(lastLog.reps)")
                         .foregroundColor(.gray)
+                }
+                
+                // MARK: Add here some sort of viewing screen of current session but ONLY for that exercise
+                
+                if let session = currentSession{
+                   let currentLogWorkout = session.logs
+                        .filter({ $0.name == workout.name })
+                        .sorted(by: { $0.date > $1.date })
+                    if !currentLogWorkout.isEmpty {
+                        VStack(alignment: .leading, spacing: 8){
+                            Text("This Session")
+                                .font(.headline)
+                            ForEach(currentLogWorkout) { log in
+                                Text("\(formattedWeight(log.weight)) lbs x \(log.reps)")
+                                    .foregroundStyle(.gray)
+                                
+                            }
+                        }
+                    }
+//                        .first {
+//                    Text("Current set: \(formattedWeight(latestForThisWorkout.weight)) lbs x \(latestForThisWorkout.reps)")
+//                        .foregroundStyle(.secondary)
                 }
                 
                 Spacer()
@@ -80,7 +106,8 @@ struct ExerciseDetailView: View {
             }
         }    }
     
-    // Look for most completed log w same exercise name 
+    // Only use logs from completed sessions. Logs without a session count as incomplete.
+
     private var lastCompletedLog: ExerciseLog? {
         logs.first { log in
             log.name == workout.name && (log.session?.isCompleted ?? false) // Check to see if there is a current session and if it's completed (if nil = false)
@@ -91,3 +118,4 @@ struct ExerciseDetailView: View {
         String(format: "%.1f", weight)
     }
 }
+

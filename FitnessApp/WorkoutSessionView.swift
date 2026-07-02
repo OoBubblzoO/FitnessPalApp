@@ -48,6 +48,10 @@ struct WorkoutSessionView: View {
                                 HStack(spacing: 16) {
                                     Text("Sets: \(workout.sets)")
                                     Text("Reps: \(workout.reps)")
+                                    Spacer()
+                                    Image(systemName: hasLoggedSet(for: workout) ? "checkmark.circle.fill" : "checkmark.circle")
+                                        .foregroundStyle(hasLoggedSet(for: workout) ? Color("PrimaryColor") : Color("BackgroundColor").opacity(0.5))
+                                        .accessibilityLabel(hasLoggedSet(for: workout) ? "Logged" : "Not logged")
                                 }
                                 .font(.subheadline)
                                 .foregroundStyle(Color("BackgroundColor").opacity(0.72))
@@ -134,6 +138,20 @@ struct WorkoutSessionView: View {
     // Format to 1 dec
     private func formattedWeight(_ weight: Double) -> String {
         String(format: "%.1f", weight)
+    }
+    
+    private func hasLoggedSet(for workout: Workout) -> Bool {
+        // If we don't have a current session, nothing can be logged for today in-session
+        guard let currentSession else { return false }
+        // Check the session's logs for any entry that references this workout
+        return currentSession.logs.contains { log in
+            // If ExerciseLog holds a relationship to Workout, compare by identity
+            if let loggedWorkout = log.workout {
+                return loggedWorkout == workout
+            }
+            // Fallback: if logs store only IDs or names, compare on name
+            return log.name == workout.name
+        }
     }
     
     private func saveAdditionalWorkout() {
