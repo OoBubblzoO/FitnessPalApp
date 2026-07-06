@@ -168,6 +168,7 @@ struct ContentView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(Color("BackgroundColor").opacity(0.72)) // Froce Dark Text but softer
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
                                 .listRowBackground(
                                     isSelected
