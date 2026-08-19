@@ -47,7 +47,7 @@ final class ExerciseLog {
     var date: Date
     var weight: Double
     var reps: Int
-    var session: WorkoutSession? // Belongs to workout session -> workoutSession creates logs
+    var session: WorkoutSession? // Belongs to workout session -> workoutSession creates logs NOTE: OUR INVERSE RELATION IS HERE !!! SEE LOGS IN WORKOUTSESSION
     
     init(workout: Workout?, name: String, date: Date, weight: Double, reps: Int, session: WorkoutSession? = nil) {
         self.workout = workout
@@ -65,7 +65,8 @@ final class WorkoutSession {
     var workoutGroup: WorkoutGroup?
     var name : String
     var date: Date               // Date recorded to group
-    var logs: [ExerciseLog]      // All sets recorded in this session
+    @Relationship(inverse: \ExerciseLog.session)
+    var logs: [ExerciseLog]  = []     // All sets recorded in this session
     var additionalWorkouts: [Workout] // Exercises added only for this session
     var isCompleted: Bool        // Marks if the session was finished
     

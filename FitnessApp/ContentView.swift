@@ -72,21 +72,6 @@ struct ContentView: View {
                         
                         VStack(spacing: 14) {
                             
-                            let workout = Workout(name: "Hammer Curl", sets: "3", reps: "10-15")
-                            Button("Save Test Log") {
-                                let log = ExerciseLog(
-                                    workout: workout,
-                                    name: "Hammer Curl",
-                                    date: Date(),
-                                    weight: 135,
-                                    reps: 10
-                                )
-                                
-                                modelContext.insert(log)
-                                try? modelContext.save()
-                                print("Saved Log", log.name, log.date, log.weight, log.reps)
-                                print("Logs count, \(logs.count)")
-                            }
                             Button("Record cardio session"){
                                 isCardioSheetPresented.toggle()
                                 print("Toggling Cardio Session")
@@ -107,7 +92,7 @@ struct ContentView: View {
                             .buttonStyle(FitnessSecondaryButtonStyle())
                         }
                         .padding(.top, 8)
-                        .navigationTitle("TESTING")
+                        //.navigationTitle("TESTING")
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
                                 NavigationLink(destination: CalendarView()){

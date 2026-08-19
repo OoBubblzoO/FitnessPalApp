@@ -53,7 +53,7 @@ struct ExerciseDetailView: View {
                             session: currentSession
                         )
                         
-                        currentSession?.logs.append(log)
+                        // currentSession?.logs.append(log) <- no longer need due to relation auto inserts
                         modelContext.insert(log)
                         
                         weightInput = ""

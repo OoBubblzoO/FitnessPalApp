@@ -161,9 +161,6 @@ struct CalendarView: View {
                     }
                 }
 
-                Text("Sessions loaded: \(sessions.count)")
-                    .foregroundStyle(Color("AccentColor"))
-                
                 // Calendar View
                 // *REMEMBER* ForEach loops through each weekdayString!
                 HStack(spacing: 12){
@@ -285,10 +282,12 @@ struct CalendarView: View {
                                     .foregroundStyle(Color("AccentColor"))
                             }
                             
+                            
+                            
                             if !selectedSessions.isEmpty {
                                 Section("Workout Groups") {
                                     ForEach(selectedSessions) { session in
-                                        VStack(alignment: .leading, spacing: 10) {
+                                        VStack(alignment: .leading, spacing: 4) {
                                             Text(session.name)
                                                 .font(.headline)
                                                 .foregroundStyle(Color("PrimaryColor"))
