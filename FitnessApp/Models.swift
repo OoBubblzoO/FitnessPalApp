@@ -16,6 +16,7 @@ final class Workout {
     var name: String
     var sets: String
     var reps: String
+    var sortOrder: Int = 0
     
     init(name: String, sets: String, reps: String ){
         self.name = name
@@ -32,8 +33,15 @@ final class WorkoutGroup {
     var title: String
     var workouts: [Workout] = []
     
+    var orderedWorkouts: [Workout] {
+        workouts.sorted { $0.sortOrder < $1.sortOrder }
+    }
+
     init(title: String, workouts: [Workout] = [] ){
         self.title = title
+        for (index, workout) in workouts.enumerated() {
+            workout.sortOrder = index
+        }
         self.workouts = workouts
     }
 }
@@ -48,6 +56,9 @@ extension WorkoutGroup {
             session.hasPlanSnapshot = true
         }
         self.title = title
+        for (index, workout) in workouts.enumerated() {
+            workout.sortOrder = index
+        }
         self.workouts = workouts
     }
 }
@@ -89,7 +100,7 @@ final class WorkoutSession {
     var isCompleted: Bool        // Marks if the session was finished
 
     var sessionWorkouts: [Workout] {
-        (hasPlanSnapshot ? (plannedWorkouts ?? []) : (workoutGroup?.workouts ?? [])) + additionalWorkouts
+        (hasPlanSnapshot ? (plannedWorkouts ?? []).sorted { $0.sortOrder < $1.sortOrder } : (workoutGroup?.orderedWorkouts ?? [])) + additionalWorkouts
     }
     
     

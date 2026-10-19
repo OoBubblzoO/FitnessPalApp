@@ -343,7 +343,7 @@ struct CalendarView: View {
                                                 .font(.headline)
                                                 .foregroundStyle(Color("PrimaryColor"))
 
-                                            Text("\(cardioSession.distance, specifier: "%.2f") miles")
+                                            Text(cardioSession.distance > 0 ? "\(cardioSession.distance.formatted()) miles" : "Distance not recorded")
                                                 .font(.subheadline)
                                                 .foregroundStyle(Color("PrimaryColor"))
                                             

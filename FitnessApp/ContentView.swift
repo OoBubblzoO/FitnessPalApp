@@ -27,11 +27,6 @@ struct ContentView: View {
     // The group currently being performed in a session
     @State private var activeGroup: WorkoutGroup? = nil
     
-    @State private var cardioType: String = ""
-    @State private var cardioDistance: String = ""
-    @State private var cardioTime: String = ""
-    
-    
     // Starting sessions
     @Environment(\.modelContext) private var modelContext
     @State private var currentSession: WorkoutSession?
@@ -108,7 +103,7 @@ struct ContentView: View {
                         workoutSelectionSheet
                     }
                     .sheet(isPresented: $isCardioSheetPresented){
-                        CardioSessionSheet
+                        CardioSessionEntryView()
                     }
                 }
             }
@@ -148,7 +143,7 @@ struct ContentView: View {
                         }
                             .foregroundStyle(Color("AccentColor"))) {
                             
-                            ForEach(workoutGroup.workouts) { workout in
+                            ForEach(workoutGroup.orderedWorkouts) { workout in
                                 
                                 VStack(alignment: .leading) {
                                     
@@ -214,82 +209,11 @@ struct ContentView: View {
         }
     }
     
-    // CARDIO VIEW
-    private var CardioSessionSheet: some View {
-        ZStack{
-            Color("BackgroundColor")
-                .ignoresSafeArea()
-            VStack(spacing: 16) {
-                Text("ENTER YOUR CARDIO")
-                    .font(.system(size: 20, weight: .medium))
-                    .bold()
-                    .padding(12)
-                    .foregroundStyle(Color("AccentColor"))
-                HStack {
-                    TextField("Type", text: $cardioType)
-                        .textFieldStyle(.roundedBorder)
-                    TextField("Distance", text: $cardioDistance)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
-                    TextField("Duration", text: $cardioTime)
-                        .textFieldStyle(.roundedBorder)
-                }
-                    
-                Button("Save Cardio") {
-                    guard
-                        !cardioType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                        !cardioDistance.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                        let distance = Double(cardioDistance.trimmingCharacters(in: .whitespacesAndNewlines)),
-                        let durationSeconds = parsedDurationSeconds(from: cardioTime)
-                    else {
-                        return
-                    }
-                    let cardioSession = CardioSession(
-                        name: cardioType.trimmingCharacters(in: .whitespacesAndNewlines),
-                        distance: distance,
-                        durationSeconds: durationSeconds,
-                        date: Date()
-                        
-                    )
-                    
-                    modelContext.insert(cardioSession)
-                    try? modelContext.save()
-                    
-                    // Reset fields upon opening 
-                    cardioType = ""
-                    cardioDistance = ""
-                    cardioTime = ""
-                    isCardioSheetPresented = false
-                }
-                .buttonStyle(FitnessSecondaryButtonStyle())
-                
-                Spacer()
-                
-            }
-            .padding()
-        }
-    }
 }
 
 
 
 private extension ContentView {
-    
-    func parsedDurationSeconds(from text: String) -> Int? {
-        let parts = text.split(separator: ":")
-        
-        guard parts.count == 3,
-              let hours = Int(parts[0]),
-              let minutes = Int(parts[1]),
-              let seconds = Int(parts[2]),
-              minutes >= 0, minutes < 60,
-              seconds >= 0, seconds < 60
-        else {
-            return nil
-        }
-        
-        return (hours * 3600) + (minutes * 60) + seconds
-    }
     
     func seedDefaultWorkoutGroupsIfNeeded() {
         // Seed starter group only when the database is empty so testing always has one list entry.

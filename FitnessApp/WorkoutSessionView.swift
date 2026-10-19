@@ -99,7 +99,7 @@ struct WorkoutSessionView: View {
     
     // Returns full list of exercises with both temp and regular group || can be nil
     private var sessionWorkouts: [Workout] {
-        currentSession?.sessionWorkouts ?? workoutGroup.workouts
+        currentSession?.sessionWorkouts ?? workoutGroup.orderedWorkouts
     }
     
     private var latestCompletedSessionForGroup: WorkoutSession? {
