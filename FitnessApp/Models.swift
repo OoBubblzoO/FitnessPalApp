@@ -38,6 +38,20 @@ final class WorkoutGroup {
     }
 }
 
+extension WorkoutGroup {
+    /// Keep existing exercise objects immutable: historical sessions and logs retain them.
+    /// Callers save the context after applying the replacement.
+    func replacePlan(title: String, workouts: [Workout], in context: ModelContext) throws {
+        let sessions = try context.fetch(FetchDescriptor<WorkoutSession>())
+        for session in sessions where session.workoutGroup == self && !session.hasPlanSnapshot {
+            session.plannedWorkouts = self.workouts
+            session.hasPlanSnapshot = true
+        }
+        self.title = title
+        self.workouts = workouts
+    }
+}
+
 // A record of what you lifted for a workout on a date
 // on this date workout was performed with this weight and reps
 @Model
@@ -68,12 +82,22 @@ final class WorkoutSession {
     @Relationship(inverse: \ExerciseLog.session)
     var logs: [ExerciseLog]  = []     // All sets recorded in this session
     var additionalWorkouts: [Workout] // Exercises added only for this session
+    // SwiftData can reload nil to-many relationships as empty arrays.
+    // A separate flag reliably identifies records created before snapshots.
+    var hasPlanSnapshot: Bool = false
+    var plannedWorkouts: [Workout]?
     var isCompleted: Bool        // Marks if the session was finished
+
+    var sessionWorkouts: [Workout] {
+        (hasPlanSnapshot ? (plannedWorkouts ?? []) : (workoutGroup?.workouts ?? [])) + additionalWorkouts
+    }
     
     
     // Provide default values for saved time
     init(workoutGroup: WorkoutGroup?, name: String, date: Date = Date(), logs: [ExerciseLog] = [], additionalWorkouts: [Workout] = [], isCompleted: Bool = false) {
         self.workoutGroup = workoutGroup
+        self.plannedWorkouts = workoutGroup?.workouts ?? []
+        self.hasPlanSnapshot = true
         self.name = name
         self.date = date
         self.logs = logs

@@ -292,6 +292,17 @@ struct CalendarView: View {
                                                 .font(.headline)
                                                 .foregroundStyle(Color("PrimaryColor"))
 
+                                            DisclosureGroup("Planned Exercises") {
+                                                ForEach(session.sessionWorkouts) { workout in
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        Text(workout.name)
+                                                        Text("\(workout.sets) sets • \(workout.reps) reps")
+                                                            .font(.subheadline)
+                                                            .foregroundStyle(.secondary)
+                                                    }
+                                                }
+                                            }
+
                                             if session.logs.isEmpty {
                                                 Text("No exercise logs recorded.")
                                                     .foregroundStyle(Color("AccentColor"))

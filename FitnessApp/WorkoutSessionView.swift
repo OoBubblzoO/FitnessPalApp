@@ -30,7 +30,7 @@ struct WorkoutSessionView: View {
             Color("BackgroundColor")
                 .ignoresSafeArea()
             VStack {
-                Text(workoutGroup.title)
+                Text(currentSession?.name ?? workoutGroup.title)
                     .font(.system(size: 25, weight: .medium))
                     .foregroundStyle(Color("AccentColor"))
                     .padding(.top, 50)
@@ -99,7 +99,7 @@ struct WorkoutSessionView: View {
     
     // Returns full list of exercises with both temp and regular group || can be nil
     private var sessionWorkouts: [Workout] {
-        workoutGroup.workouts + (currentSession?.additionalWorkouts ?? [])
+        currentSession?.sessionWorkouts ?? workoutGroup.workouts
     }
     
     private var latestCompletedSessionForGroup: WorkoutSession? {
@@ -132,7 +132,7 @@ struct WorkoutSessionView: View {
     
     // Logs store only workout IDs so this maps each saved log back to a display name. TY
     private func workoutName(for log: ExerciseLog) -> String {
-        log.workout?.name ?? "Exercise"
+        log.name
     }
     
     // Format to 1 dec

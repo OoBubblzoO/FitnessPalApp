@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var isCardioSheetPresented: Bool = false
     // The group the user tapped in the list
     @State private var selectedGroup: WorkoutGroup? = nil
+    @State private var editingGroup: WorkoutGroup?
     // The group currently being performed in a session
     @State private var activeGroup: WorkoutGroup? = nil
     
@@ -34,11 +35,12 @@ struct ContentView: View {
     // Starting sessions
     @Environment(\.modelContext) private var modelContext
     @State private var currentSession: WorkoutSession?
-    @Query(sort: \WorkoutSession.date, order: .reverse)
-    var sessions: [WorkoutSession]
-    
-    @Query(sort: \ExerciseLog.date, order: .reverse)
-    var logs: [ExerciseLog]
+   
+    @Query(
+        filter: #Predicate<WorkoutSession> { $0.isCompleted == false },
+        sort: \WorkoutSession.date,
+        order: .reverse )
+    private var unfinishedSessions: [WorkoutSession]
     
     var body: some View {
         NavigationStack {
@@ -113,6 +115,7 @@ struct ContentView: View {
         }
         .task {
             seedDefaultWorkoutGroupsIfNeeded()
+            resumedUnfinishedSessionIfNeeded()
         }
     }
     
@@ -133,9 +136,16 @@ struct ContentView: View {
                 List {
                     ForEach(workoutGroups) { workoutGroup in
                         
-                        let isSelected = selectedGroup?.title == workoutGroup.title
+                        let isSelected = selectedGroup == workoutGroup
                         
-                        Section(header: Text(workoutGroup.title)
+                        Section(header: HStack {
+                            Text(workoutGroup.title)
+                            Spacer()
+                            Button("Edit", systemImage: "pencil") {
+                                editingGroup = workoutGroup
+                            }
+                            .accessibilityLabel("Edit \(workoutGroup.title)")
+                        }
                             .foregroundStyle(Color("AccentColor"))) {
                             
                             ForEach(workoutGroup.workouts) { workout in
@@ -198,6 +208,9 @@ struct ContentView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 8)
             }
+        }
+        .sheet(item: $editingGroup) { group in
+            EditWorkoutGroupView(group: group)
         }
     }
     
@@ -295,6 +308,25 @@ private extension ContentView {
         
         modelContext.insert(defaultWorkoutGroup)
         try? modelContext.save()
+    }
+    
+    func resumedUnfinishedSessionIfNeeded() {
+        
+        // session running? -> leave alone
+        guard currentSession == nil else { return }
+        
+        // Resume something if within time frame to resume
+        let cutoff = Date().addingTimeInterval(-6 * 60 * 60)
+        
+        // All 3 pass or do nothing
+        guard let session = unfinishedSessions.first, // Potential Candidaet?
+                  session.date > cutoff,              // Recent enough?
+                  let group = session.workoutGroup    // Group?
+        else { return }
+        
+        // Restore if pass
+        currentSession = session
+        activeGroup = group
     }
 }
 
